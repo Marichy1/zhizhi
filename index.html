@@ -44,11 +44,29 @@
             will-change: left, top;
             animation: tag-pop-in 0.3s ease-out;
             touch-action: none;
+            /* 默认不添加 transition，避免拖拽延迟；合并动画由特定类负责 */
         }
         @keyframes tag-pop-in {
             0% { transform: scale(0); opacity: 0; }
             50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
+        }
+        /* 合并动画专用类 */
+        .tag.merging-move {
+            transition: left 0.15s ease, top 0.15s ease, transform 0.2s ease, opacity 0.2s ease;
+        }
+        .tag.merging-out {
+            transform: scale(0.3);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .tag.merging-bounce {
+            animation: merge-bounce 0.3s ease-out;
+        }
+        @keyframes merge-bounce {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
 
         #spider-btn-area {
@@ -168,7 +186,7 @@
 <div id="overlay"></div>
 <div id="popup">
     <div class="popup-header" id="popup-header">
-        <span class="title-text">蜘蜘带你到这里</span>
+        <span class="title-text">蜘蜘带你去这里</span>
         <div class="close-btn" id="close-popup">✕</div>
     </div>
     <div class="popup-name" id="popup-name"></div>
@@ -186,18 +204,499 @@
 
 <script>
 (function() {
-    const TAG_POOL = ['#音乐','#博客','#游戏','#书籍','#独立电影'];
+    const TAG_POOL = ["#音乐","#博客","#游戏","#书籍","#高能预警","#社区","#谜题","#艺术","#神秘","#不安","#影视","#哲思","#故事","#科技","#情绪","#教程","#欢乐","#古早"];
     const PAGES = [
-        { name:'落网', desc:'独立音乐推荐平台，小众而精致。', img:'auto', url:'https://www.luoo.net/', tags:['#音乐'] },
-        { name:'看见音乐', desc:'为独立音乐人服务的社区。', img:'auto', url:'https://www.kanjian.com/', tags:['#音乐','#设计'] },
-        { name:'阮一峰的网络日志', desc:'科技与人文的深度思考。', img:'auto', url:'https://www.ruanyifeng.com/blog/', tags:['#博客'] },
-        { name:'利器', desc:'采访不同人士使用的工具。', img:'auto', url:'https://liqi.io/', tags:['#博客'] },
-        { name:'IndieNova', desc:'独立游戏交流与发现平台。', img:'auto', url:'https://indienova.com/', tags:['#游戏'] },
-        { name:'itch.io', desc:'海量创意独立游戏。', img:'auto', url:'https://itch.io/', tags:['#游戏'] },
-        { name:'好书友', desc:'分享小众优质书籍。', img:'auto', url:'https://www.haoshuyou.com/', tags:['#书籍'] },
-        { name:'书格', desc:'线上古籍图书馆。', img:'auto', url:'https://new.shuge.org/', tags:['#书籍'] },
-        { name:'V电影', desc:'高品质短片分享平台。', img:'auto', url:'https://www.vmovier.com/', tags:['#独立电影'] }
-    ];
+    {
+        "name": "血清素恐惧症",
+        "desc": "一个神秘的小游戏合集。“什么是电子游戏，这个游戏，以及所有游戏的答案？”",
+        "img": "auto",
+        "url": "https://lab.serotoninphobia.info/",
+        "tags": [
+            "#游戏",
+            "#谜题",
+            "#艺术",
+            "#神秘"
+        ]
+    },
+    {
+        "name": "Yondermore地铁",
+        "desc": "一个普通的地铁官网……等等，这对吗？",
+        "img": "auto",
+        "url": "https://metro.yondermore.org/",
+        "tags": [
+            "#不安",
+            "#神秘",
+            "#艺术",
+            "#高能预警",
+            "#谜题"
+        ]
+    },
+    {
+        "name": "重回金银岛",
+        "desc": "经典老片……不是，把小说改成啥样了(((ﾟДﾟ;)))",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1ox41157A5/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#古早",
+            "#欢乐",
+            "#影视"
+        ]
+    },
+    {
+        "name": "「不按A键挑战」的历史 ",
+        "desc": "游戏史上最具代表性的挑战，你能看到玩家们努力之下发现的一个有一个令人惊叹的技巧。有阅读科学史的感觉。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1q3411x7ZB/?spm_id_from=333.1387.favlist.content.click",
+        "tags": [
+            "#游戏",
+            "#谜题",
+            "#故事"
+        ]
+    },
+    {
+        "name": "《蓝丝绒》",
+        "desc": "大卫林奇的经典电影。在误入了那个黑暗的兔子洞之后，就再也回不到过去了，你会意识到每一片蓝丝绒窗帘下，都可能隐藏着黑暗的秘密……",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1k4miB4E6k/?vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#影视",
+            "#不安"
+        ]
+    },
+    {
+        "name": "大学生登山失踪事件",
+        "desc": "中文互联网上网页解谜游戏的开山之作，搜索栏的解谜形式相当新颖呢。",
+        "img": "auto",
+        "url": "https://missing.shiroki-y.top/introduction.html",
+        "tags": [
+            "#游戏",
+            "#谜题",
+            "#不安"
+        ]
+    },
+    {
+        "name": "WEBSITE",
+        "desc": "\"当观测既是存在，你能忍住不看吗\"用ai制作的短片，展现了很多荒诞的场景，也很有深度",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1tXDXBsEXp/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#艺术",
+            "#故事",
+            "#哲思",
+            "#影视",
+            "#欢乐"
+        ]
+    },
+    {
+        "name": "大市场",
+        "desc": "诡异的实验性专辑，真的有人能听完吗……",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1rTMJzZE45/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#音乐",
+            "#高能预警",
+            "#艺术",
+            "#不安",
+            "#神秘"
+        ]
+    },
+    {
+        "name": "《Cosmic Ultramarine》",
+        "desc": "“在意识、网络和宇宙的深处，是一场赛博群青的梦”就像是一股来自宇宙之外的脑电波，只有接收到的人才能加入他们的狂欢。乌托邦、自由意识、虚无主义、存在主义、宏大叙事，读到了许许多多的一切，还有那种独特的宁静感，像是一阵狂奔后倒在草坪上看着蔚蓝的天空怀想着群青的梦。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1AFWAzWE1Q/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#艺术",
+            "#游戏",
+            "#哲思",
+            "#情绪"
+        ]
+    },
+    {
+        "name": "Cirrus",
+        "desc": "cyriak的经典作品，光怪陆离的场景就像梦境一样。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1xZ4y1G7cw?spm_id_from=333.788.recommend_more_video.1&trackid=web_related_0.router-related-2479604-ptszh.1777175601596.74&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#音乐",
+            "#艺术",
+            "#高能预警",
+            "#古早"
+        ]
+    },
+    {
+        "name": "癌宝宝之歌",
+        "desc": "陆杨的音乐作品，用欢乐的画面来表现这些东西还是蛮令人不安的……",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1hs41167FE/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#音乐",
+            "#艺术",
+            "#高能预警",
+            "#不安",
+            "#古早"
+        ]
+    },
+    {
+        "name": "贝克街推理学院",
+        "desc": "推理爱好者的交流论坛，上面也有一些原创的推理故事和推理相关的游戏。",
+        "img": "auto",
+        "url": "https://www.tuilixy.net/",
+        "tags": [
+            "#社区",
+            "#谜题"
+        ]
+    },
+    {
+        "name": "科学网博客",
+        "desc": "古早而正式的博客网站，有很多科技相关的文章。",
+        "img": "auto",
+        "url": "https://blog.sciencenet.cn/blog.php",
+        "tags": [
+            "#博客",
+            "#古早",
+            "#科技"
+        ]
+    },
+    {
+        "name": "【市松寿ゞ謡】ウルトラ都市伝説【MV】",
+        "desc": "一个奇怪的歌曲mv，歌还挺好听的……谨慎观看吧。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1SzTKzvEXi/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#音乐",
+            "#高能预警",
+            "#艺术",
+            "#神秘",
+            "#不安"
+        ]
+    },
+    {
+        "name": "左旋科技",
+        "desc": "一个神秘的保健品推销网站，应该没人会信吧……大概吧。",
+        "img": "auto",
+        "url": "http://www.zxtech.com/",
+        "tags": [
+            "#神秘",
+            "#古早",
+            "#科技"
+        ]
+    },
+    {
+        "name": "迷雾论坛",
+        "desc": "一个用来交流arg（交替现实游戏）的论坛。氛围友好，但活跃度不算高。",
+        "img": "auto",
+        "url": "https://mistarg.cn/",
+        "tags": [
+            "#游戏",
+            "#谜题",
+            "#社区"
+        ]
+    },
+    {
+        "name": "第十三层灵异论坛",
+        "desc": "“一個分享身邊靈異故事的平台”很有意思呢。",
+        "img": "auto",
+        "url": "https://dishisanceng.com/",
+        "tags": [
+            "#社区",
+            "#神秘",
+            "#故事"
+        ]
+    },
+    {
+        "name": "101围棋",
+        "desc": "老牌围棋学习网站，相关的功能很多。",
+        "img": "auto",
+        "url": "https://www.101weiqi.cn/",
+        "tags": [
+            "#教程",
+            "#社区",
+            "#游戏"
+        ]
+    },
+    {
+        "name": "speedrun.com",
+        "desc": "游戏速通的社区。一位又一位玩家的不懈努力，创造了很多奇迹呢。",
+        "img": "auto",
+        "url": "https://www.speedrun.com/zh-cn",
+        "tags": [
+            "#游戏",
+            "#社区"
+        ]
+    },
+    {
+        "name": "道本语学习教程",
+        "desc": "道本语由一名翻译家创作，只包含一百多个单词，大概是世界上最简单的语言了吧。据说译名来自“大道至简”。",
+        "img": "auto",
+        "url": "https://zhuanlan.zhihu.com/toki-pona",
+        "tags": [
+            "#教程"
+        ]
+    },
+    {
+        "name": "【独立恐怖游戏pv】新建图exewzwze0X·sai （绘画源文件共享预告",
+        "desc": "sai格式绘画源文件资源共享....属于游戏吗？\n只需要一个sai1软件和简单的操作就可以和来自画布里的人对话\n真正意义上的做到如何在sai里和纸片人交流？！？！？！？",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1BZ4y1W7Ut/?spm_id_from=333.1387.homepage.video_card.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#游戏",
+            "#艺术"
+        ]
+    },
+    {
+        "name": "【授权搬运】ENA - Temptation Stairway",
+        "desc": "一个抽象而神秘的小动画，质量很高。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1Kh411y7E5/?spm_id_from=333.337.search-card.all.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#艺术",
+            "#神秘",
+            "#影视",
+            "#故事",
+            "#欢乐"
+        ]
+    },
+    {
+        "name": "《羊孩贾尔斯》",
+        "desc": "超级大部头｜神话+寓言+科幻，羊孩拯救世界的超级冒险。后现代文学大师约翰·巴斯的小说。",
+        "img": "auto",
+        "url": "https://zhuanlan.zhihu.com/p/1572801706",
+        "tags": [
+            "#书籍",
+            "#神秘",
+            "#故事",
+            "#哲思"
+        ]
+    },
+    {
+        "name": "TAS Videos",
+        "desc": "用来上传和观看工具辅助游戏通关视频的网站，很有观赏性呢。",
+        "img": "auto",
+        "url": "https://tasvideos.org/",
+        "tags": [
+            "#游戏",
+            "#社区"
+        ]
+    },
+    {
+        "name": "企鹅公路",
+        "desc": "一部动画电影，关于少年、科学与成长，改编自森见登美彦的同名小说。",
+        "img": "auto",
+        "url": "https://baike.baidu.com/item/%E4%BC%81%E9%B9%85%E5%85%AC%E8%B7%AF/22664507",
+        "tags": [
+            "#故事",
+            "#影视",
+            "#书籍"
+        ]
+    },
+    {
+        "name": "Puzzlescript",
+        "desc": "一个类推箱解谜游戏的制作器，网站上也有很多优质的游戏。",
+        "img": "auto",
+        "url": "https://www.puzzlescript.net/",
+        "tags": [
+            "#游戏",
+            "#谜题",
+            "#社区"
+        ]
+    },
+    {
+        "name": "魔法少女生成器",
+        "desc": "一个有趣的网站，可以用ai生成人物档案并创作战斗或剧情，有一个完整的社区。",
+        "img": "auto",
+        "url": "https://mahoshojo.colanns.me/",
+        "tags": [
+            "#故事",
+            "#社区"
+        ]
+    },
+    {
+        "name": "来自20世纪的妄想，堕落与疯狂——揭开恐怖人偶剧场古兰.吉涅尔的帷幕",
+        "desc": "一个介绍视频，那个时候真的存在这样的剧场吗？",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1tAcVeGEu1/?spm_id_from=333.1387.favlist.content.click",
+        "tags": [
+            "#故事"
+        ]
+    },
+    {
+        "name": "「Eve.aic」投稿合集",
+        "desc": "是[数据删除]的解说视频呢，风格很安静，不过很久之前就停更了。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1qFNoz7EKD/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#故事",
+            "#古早",
+            "#神秘"
+        ]
+    },
+    {
+        "name": "天使公园武藏",
+        "desc": "一个有些恐怖的网站……据说需要答题？不过蜘蜘看不懂日文，没有深入。",
+        "img": "auto",
+        "url": "https://um6bit.kikirara.jp/",
+        "tags": [
+            "#不安",
+            "#神秘",
+            "#谜题",
+            "#高能预警"
+        ]
+    },
+    {
+        "name": "我的秘密花园",
+        "desc": "失踪女孩的博客里藏着什么？一个网页解谜游戏，剧情的部分非常用心，真的能通过文字感受到情绪。",
+        "img": "auto",
+        "url": "https://anninganya-glitch.github.io/My-Secret-Garden/",
+        "tags": [
+            "#艺术",
+            "#谜题",
+            "#游戏",
+            "#情绪",
+            "#不安",
+            "#故事"
+        ]
+    },
+    {
+        "name": "【CC字幕】Dora the Teenager（成长中的朵拉）",
+        "desc": "关于长大的朵拉的小动画。小时候去参加拍摄，长大之后可能会感到尴尬吧。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1je411u7R7/?spm_id_from=333.337.search-card.all.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#欢乐",
+            "#故事"
+        ]
+    },
+    {
+        "name": "自由派乐理",
+        "desc": "“没有束缚的21世纪乐理”优质的乐理教程，带有大量可听的示例与简明的解释。",
+        "img": "auto",
+        "url": "https://music-theory.aizcutei.com/",
+        "tags": [
+            "#音乐",
+            "#教程"
+        ]
+    },
+    {
+        "name": "ぼくのはて",
+        "desc": "NMKK的经典歌曲。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1u34y1Q7FL?spm_id_from=333.788.recommend_more_video.0&trackid=web_related_0.router-related-2479604-ptszh.1777168564656.300&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#情绪",
+            "#音乐",
+            "#艺术"
+        ]
+    },
+    {
+        "name": "哈默林吹笛人为何让人觉得诡异？",
+        "desc": "童话，生活，与历史的回响。",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1LEXFBRETc/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#故事",
+            "#哲思"
+        ]
+    },
+    {
+        "name": "未来電波基地 - Unslept",
+        "desc": "那已经是很久以前的了，几年后的少年重新翻开这本书，看着满是灰尘的那页，\"虽然以前的快乐可能不能再回来了，但是未来还要快乐在等着呢。\"",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1ERMJzdEMH?spm_id_from=333.788.recommend_more_video.1&trackid=web_related_0.router-related-2479604-5tzfh.1777168158974.63&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#音乐",
+            "#艺术"
+        ]
+    },
+    {
+        "name": "unhappy",
+        "desc": "靠坐在树下的阴天,一首伤心的音乐……",
+        "img": "auto",
+        "url": "https://www.bilibili.com/video/BV1NmZABcEBU/?spm_id_from=333.788.recommend_more_video.4&trackid=web_related_0.router-related-2479604-ptszh.1777167987167.900&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
+        "tags": [
+            "#音乐",
+            "#艺术"
+        ]
+    },
+    {
+        "name": "blinry的博客",
+        "desc": "一位设计师的博客，网站上有很多交互项目。",
+        "img": "auto",
+        "url": "https://blinry.org/",
+        "tags": [
+            "#博客",
+            "#艺术"
+        ]
+    },
+    {
+        "name": "GIF Guru",
+        "desc": "一个收藏大量古早动图的网站。",
+        "img": "auto",
+        "url": "https://gif.guru/",
+        "tags": [
+            "#艺术",
+            "#古早"
+        ]
+    },
+    {
+        "name": "箱子召唤师",
+        "desc": "蜘蜘制作的小游戏，难度还蛮高的。",
+        "img": "auto",
+        "url": "https://www.puzzlescript.net/play.html?p=fe7752c075e1b5a02e80e0a2bd45da56",
+        "tags": [
+            "#游戏",
+            "#谜题"
+        ]
+    },
+    {
+        "name": "阮一峰的网络日志",
+        "desc": "优质的博客网站，记录科技与人文的深度思考。",
+        "img": "auto",
+        "url": "https://www.ruanyifeng.com/blog/",
+        "tags": [
+            "#博客",
+            "#哲思",
+            "#科技"
+        ]
+    },
+    {
+        "name": "利器",
+        "desc": "有很多对各行人士的采访。",
+        "img": "auto",
+        "url": "https://liqi.io/",
+        "tags": [
+            "#博客"
+        ]
+    },
+    {
+        "name": "IndieNova",
+        "desc": "独立游戏交流与发现平台。",
+        "img": "auto",
+        "url": "https://indienova.com/",
+        "tags": [
+            "#游戏"
+        ]
+    },
+    {
+        "name": "itch.io",
+        "desc": "有很多独立游戏，不过现在需要科学上网了qwq",
+        "img": "auto",
+        "url": "https://itch.io/",
+        "tags": [
+            "#游戏"
+        ]
+    },
+    {
+        "name": "书格",
+        "desc": "线上古籍图书馆,记录了大量书籍的电子版本。",
+        "img": "auto",
+        "url": "https://new.shuge.org/",
+        "tags": [
+            "#书籍",
+            "#古早"
+        ]
+    }
+];
 
     const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
@@ -239,12 +738,14 @@
     let lastTargetSwitchTime = 0, switchInterval = 3000;
     const DRAG_THRESHOLD = isMobile ? 10 : 3;
 
+    // 正在合并的标签集合，避免重复操作
+    let mergingTags = new Set();
+
     function randomSpeed() {
         const speed = 30 + Math.random() * 30, angle = Math.random() * 2 * Math.PI;
         return { vx: speed * Math.cos(angle), vy: speed * Math.sin(angle) };
     }
 
-    // 生成含自定义文字的占位图
     function getPlaceholderImg(text) {
         const safeText = text || '?';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
@@ -254,7 +755,6 @@
         return 'data:image/svg+xml,' + encodeURIComponent(svg);
     }
 
-    // 根据 item 获取目标 favicon 地址
     function resolveFaviconUrl(item) {
         try {
             const origin = new URL(item.url).origin;
@@ -264,46 +764,33 @@
         }
     }
 
-    // 加载图片并设置到弹窗，包含加载提示和失败回退
     function loadPopupImage(item) {
-        // 立即显示“寻找图片中…”
-        popupImg.src = getPlaceholderImg('寻找图片中…');
-
+        popupImg.src = getPlaceholderImg('抓取图片中…');
         if (item.img !== 'auto') {
-            // 非 auto 模式直接使用原图或 placeholder
             popupImg.src = item.img === 'placeholder' ? getPlaceholderImg(item.tags?.[0] || '?') : item.img;
             return;
         }
-
         const faviconUrl = resolveFaviconUrl(item);
         if (!faviconUrl) {
-            popupImg.src = getPlaceholderImg('图片被吃掉啦！');
+            popupImg.src = getPlaceholderImg('图片跑掉啦！');
             return;
         }
-
         const testImg = new Image();
         let settled = false;
         const fail = () => {
             if (settled) return;
             settled = true;
-            popupImg.src = getPlaceholderImg('图片被吃掉啦！');
+            popupImg.src = getPlaceholderImg('图片跑掉啦！');
         };
         const success = () => {
             if (settled) return;
             settled = true;
             popupImg.src = faviconUrl;
         };
-
         testImg.onload = success;
         testImg.onerror = fail;
         testImg.src = faviconUrl;
-
-        // 超时保护
-        setTimeout(() => {
-            if (!settled) {
-                fail();
-            }
-        }, 2000);
+        setTimeout(() => { if (!settled) fail(); }, 2000);
     }
 
     function resizeBgCanvas() {
@@ -349,6 +836,56 @@
         el.style.top = y + 'px';
     }
 
+    // 合并动画：将tagB移动到tagA的位置并缩小淡出，同时tagA弹跳
+    function mergeTags(tagA, tagB) {
+        if (mergingTags.has(tagA) || mergingTags.has(tagB)) return;
+        mergingTags.add(tagA);
+        mergingTags.add(tagB);
+
+        // 临时给这两个标签加上 transition 类
+        tagB.el.classList.add('merging-move');
+        tagA.el.classList.add('merging-move');
+
+        // 将tagB瞬间移动到tagA的中心点
+        const ax = tagA.x + tagA.tagWidth/2 - tagB.tagWidth/2;
+        const ay = tagA.y + tagA.tagHeight/2 - tagB.tagHeight/2;
+        tagB.x = ax; tagB.y = ay; // 同步数据
+        tagB.el.style.left = ax + 'px';
+        tagB.el.style.top = ay + 'px';
+
+        // 下一帧开始动画
+        requestAnimationFrame(() => {
+            tagB.el.classList.add('merging-out');
+            tagA.el.classList.add('merging-bounce');
+        });
+
+        // 动画结束后移除tagB
+        const onTransitionEnd = () => {
+            tagB.el.removeEventListener('transitionend', onTransitionEnd);
+            const idx = tags.indexOf(tagB);
+            if (idx > -1) tags.splice(idx, 1);
+            tagB.el.remove();
+            mergingTags.delete(tagA);
+            mergingTags.delete(tagB);
+            tagA.el.classList.remove('merging-bounce', 'merging-move');
+            tagB.el.classList.remove('merging-move', 'merging-out');
+        };
+        tagB.el.addEventListener('transitionend', onTransitionEnd, { once: true });
+
+        // 兜底：0.5秒后强制移除
+        setTimeout(() => {
+            if (tags.includes(tagB)) {
+                tagB.el.removeEventListener('transitionend', onTransitionEnd);
+                const idx = tags.indexOf(tagB);
+                if (idx > -1) tags.splice(idx, 1);
+                tagB.el.remove();
+                mergingTags.delete(tagA);
+                mergingTags.delete(tagB);
+                tagA.el.classList.remove('merging-bounce', 'merging-move');
+            }
+        }, 500);
+    }
+
     function isMouseOverTag(tagEl) {
         const rect = tagEl.getBoundingClientRect();
         return mouseX >= rect.left && mouseX <= rect.right &&
@@ -357,6 +894,7 @@
     function updateTagHoverStates() {
         if (isMobile || overlayVisible || draggingTag) return;
         for (let tag of tags) {
+            if (mergingTags.has(tag)) continue;
             tag.el.dataset.hovered = isMouseOverTag(tag.el) ? 'true' : 'false';
         }
     }
@@ -371,7 +909,9 @@
         e.preventDefault(); e.stopPropagation();
         const tagEl = e.currentTarget;
         const tag = tags.find(t => t.el === tagEl);
-        if (!tag) return;
+        if (!tag || mergingTags.has(tag)) return;
+        // 拖拽时禁用 transition，避免粘滞感
+        tagEl.style.transition = 'none';
         tagEl.dataset.hovered = 'true';
         draggingTag = tag;
         dragOffsetX = e.clientX - tagEl.getBoundingClientRect().left;
@@ -379,6 +919,7 @@
         dragStartX = e.clientX; dragStartY = e.clientY;
         dragMoved = false;
         tagEl.style.zIndex = '99';
+        tagEl.setPointerCapture(e.pointerId);
     }
 
     document.addEventListener('pointermove', (e) => {
@@ -412,6 +953,10 @@
         if (!draggingTag) return;
         const tag = draggingTag;
         tag.el.style.zIndex = '5';
+        // 恢复 transition（移除内联样式，让CSS规则生效）
+        tag.el.style.transition = '';
+        tag.el.releasePointerCapture(e.pointerId);
+
         if (!dragMoved) {
             e.preventDefault();
             const containerRect = layerContainer.getBoundingClientRect();
@@ -500,6 +1045,7 @@
         lineCtx.strokeStyle='#D9D9D9'; lineCtx.lineWidth=1.5;
         for (let i=0;i<tags.length;i++) for (let j=i+1;j<tags.length;j++){
             const a=tags[i], b=tags[j];
+            if (mergingTags.has(a) || mergingTags.has(b)) continue;
             const ax=a.x+a.tagWidth/2, ay=a.y+a.tagHeight/2, bx=b.x+b.tagWidth/2, by=b.y+b.tagHeight/2;
             if (Math.hypot(bx-ax,by-ay)<130) {
                 lineCtx.beginPath(); lineCtx.moveTo(ax,ay); lineCtx.lineTo(bx,by); lineCtx.stroke();
@@ -511,7 +1057,7 @@
         if (overlayVisible) return;
         const rect = layerContainer.getBoundingClientRect();
         for (let tag of tags) {
-            if (tag.el.dataset.hovered === 'true' || draggingTag === tag) continue;
+            if (tag.el.dataset.hovered === 'true' || draggingTag === tag || mergingTags.has(tag)) continue;
             tag.x += tag.vx * deltaTime; tag.y += tag.vy * deltaTime;
             tag.tagWidth = tag.el.offsetWidth; tag.tagHeight = tag.el.offsetHeight;
             if (tag.x <= 0) { tag.x = 0; tag.vx *= -1; }
@@ -520,6 +1066,26 @@
             if (tag.y + tag.tagHeight >= rect.height) { tag.y = rect.height - tag.tagHeight; tag.vy *= -1; }
             tag.el.style.left = tag.x + 'px'; tag.el.style.top = tag.y + 'px';
         }
+
+        // 相同标签融合检测
+        const toMerge = [];
+        for (let i = 0; i < tags.length; i++) {
+            for (let j = i + 1; j < tags.length; j++) {
+                const a = tags[i], b = tags[j];
+                if (a.type !== b.type) continue;
+                if (mergingTags.has(a) || mergingTags.has(b)) continue;
+                if (a.el.dataset.hovered === 'true' || b.el.dataset.hovered === 'true') continue;
+                if (draggingTag === a || draggingTag === b) continue;
+                const ax = a.x + a.tagWidth/2, ay = a.y + a.tagHeight/2;
+                const bx = b.x + b.tagWidth/2, by = b.y + b.tagHeight/2;
+                const dist = Math.hypot(bx - ax, by - ay);
+                const threshold = (a.tagWidth + b.tagWidth) / 2;
+                if (dist < threshold) {
+                    toMerge.push([a, b]);
+                }
+            }
+        }
+        toMerge.forEach(pair => mergeTags(pair[0], pair[1]));
     }
 
     function drawSpider(ctx, w, h, bx, by, br, seg1, seg2, bend, mx, my, pupilScale) {
@@ -594,10 +1160,7 @@
         positionPopup(clickX, clickY);
         popupName.textContent = item.name;
         popupDesc.textContent = item.desc;
-
-        // 启动图片加载流程
         loadPopupImage(item);
-
         popupTags.innerHTML = '';
         item.tags.forEach(t => {
             const span = document.createElement('span'); span.textContent = t;
@@ -625,8 +1188,11 @@
         popup.classList.remove('active');
         const wrapper = document.getElementById('popup-spider-wrap');
         if (wrapper) wrapper.style.display = 'none';
-        if (currentRecommendTagType) addTag(currentRecommendTagType);
-        currentRecommendData = null; currentRecommendTagType = null;
+        if (currentRecommendData && currentRecommendData.tags) {
+            currentRecommendData.tags.forEach(t => addTag(t));
+        }
+        currentRecommendData = null;
+        currentRecommendTagType = null;
     }
 
     closePopupBtn.addEventListener('click', closePopup);
