@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>蜘蜘数据编辑器（增强版）</title>
+    <title>蜘蜘数据编辑器</title>
     <style>
         :root {
             --bg: #f2f2f2;
@@ -172,11 +172,35 @@
             right: 10px;
         }
 
+        .visit-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            position: absolute;
+            top: 10px;
+            right: 70px;
+        }
+
         .toolbar {
             margin-bottom: 16px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-input {
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            flex: 1;
+            min-width: 200px;
         }
     </style>
 </head>
@@ -186,13 +210,17 @@
 
     <div class="file-zone">
         <input type="file" id="fileInput" accept=".html">
-        <p>上传 zhizhu.html 开始编辑</p>
+        <p>上传 zhizhi.html 开始编辑</p>
     </div>
 
     <div class="toolbar">
-        <button id="addPageBtn">添加页面（置于顶部）</button>
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索页面...">
+        <button id="addPageBtn">添加页面（置顶）</button>
+        <button id="exportJsonBtn">导出 JSON</button>
+        <button id="importJsonBtn">导入 JSON</button>
         <button id="downloadBtn">下载更新后的 html</button>
     </div>
+    <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
 
     <div class="layout">
         <div class="panel left-panel">
@@ -216,6 +244,7 @@
     let TAG_POOL = [];
     let PAGES = [];
     let originalHTML = '';
+    let searchQuery = '';
 
     // 计算每个标签的页面数量，并按数量降序返回
     function getTagCounts() {
@@ -226,7 +255,6 @@
                 if (counts[tag] !== undefined) counts[tag]++;
             });
         });
-        // 转换为数组并排序
         return Object.entries(counts).sort((a, b) => b[1] - a[1]);
     }
 
@@ -254,6 +282,24 @@
             });
         });
     }
+
+    // 页面搜索过滤
+    function filterPages() {
+        if (!searchQuery.trim()) return PAGES;
+        const q = searchQuery.trim().toLowerCase();
+        return PAGES.filter(page => {
+            return (page.name && page.name.toLowerCase().includes(q)) ||
+                   (page.desc && page.desc.toLowerCase().includes(q)) ||
+                   (page.url && page.url.toLowerCase().includes(q)) ||
+                   (page.tags && page.tags.some(tag => tag.toLowerCase().includes(q)));
+        });
+    }
+
+    // 搜索输入框事件
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderPages();
+    });
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -314,11 +360,15 @@
     function renderPages() {
         const container = document.getElementById('pagesContainer');
         container.innerHTML = '';
-        PAGES.forEach((page, idx) => {
+        const filtered = filterPages();
+        filtered.forEach((page, filteredIdx) => {
+            // 找到该页面在原始 PAGES 中的索引，用于后续修改
+            const idx = PAGES.indexOf(page);
             const card = document.createElement('div');
             card.className = 'page-card';
             card.innerHTML = `
                 <button class="delete-page-btn">删除</button>
+                <button class="visit-btn">访问</button>
                 <label>名称 <input class="name" value="${esc(page.name)}"></label>
                 <label>简介 <textarea class="desc">${esc(page.desc)}</textarea></label>
                 <label>图片 (auto / placeholder / URL) <input class="img" value="${esc(page.img)}"></label>
@@ -340,6 +390,15 @@
             descInput.addEventListener('input', () => { page.desc = descInput.value; });
             imgInput.addEventListener('input', () => { page.img = imgInput.value || 'auto'; });
             urlInput.addEventListener('input', () => { page.url = urlInput.value; });
+
+            // 访问按钮
+            card.querySelector('.visit-btn').addEventListener('click', () => {
+                if (page.url) {
+                    window.open(page.url, '_blank');
+                } else {
+                    alert('链接为空');
+                }
+            });
 
             card.querySelector('.delete-page-btn').addEventListener('click', () => {
                 if (confirm('删除此页面？')) {
@@ -376,7 +435,7 @@
                     if (!page.tags.includes(val)) {
                         page.tags.push(val);
                         renderTagCheckboxes(selectorDiv, idx, page);
-                        renderStatsAndTags(); // 更新数量显示
+                        renderStatsAndTags();
                     }
                     newTagInput.value = '';
                 }
@@ -397,7 +456,7 @@
                 } else {
                     page.tags = page.tags.filter(t => t !== tag);
                 }
-                renderStatsAndTags(); // 更新左侧统计
+                renderStatsAndTags();
             });
             label.appendChild(cb);
             label.appendChild(document.createTextNode(tag));
@@ -405,13 +464,54 @@
         });
     }
 
+    // 添加页面（置顶）
     document.getElementById('addPageBtn').addEventListener('click', () => {
         PAGES.unshift({ name: '', desc: '', img: 'auto', url: '', tags: [] });
         renderAll();
     });
 
+    // 导出 JSON
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        const jsonStr = JSON.stringify(PAGES, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'zhizhi_data.json';
+        a.click();
+    });
+
+    // 导入 JSON
+    document.getElementById('importJsonBtn').addEventListener('click', () => {
+        document.getElementById('jsonFileInput').click();
+    });
+
+    document.getElementById('jsonFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const imported = JSON.parse(ev.target.result);
+                if (!Array.isArray(imported)) throw new Error('JSON 必须是一个数组');
+                // 确保每个页面有 img
+                imported.forEach(p => { if (!p.img) p.img = 'auto'; });
+                PAGES = imported;
+                // 从所有页面标签中重建标签池（保留原有顺序可能丢失，直接收集）
+                const tagSet = new Set();
+                PAGES.forEach(p => p.tags.forEach(t => tagSet.add(t)));
+                TAG_POOL = Array.from(tagSet).sort();
+                renderAll();
+            } catch (err) {
+                alert('导入失败：' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // 允许重复导入同一文件
+    });
+
+    // 下载更新后的 HTML
     document.getElementById('downloadBtn').addEventListener('click', () => {
-        if (!originalHTML) { alert('请先上传 zhizhu.html 文件'); return; }
+        if (!originalHTML) { alert('请先上传 zhizhi.html 文件'); return; }
         let newHTML = originalHTML;
         newHTML = newHTML.replace(/const TAG_POOL = \[.*?\];/, `const TAG_POOL = ${JSON.stringify(TAG_POOL)};`);
         newHTML = newHTML.replace(/const PAGES = \[[\s\S]*?\];/, `const PAGES = ${JSON.stringify(PAGES, null, 4)};`);
@@ -419,7 +519,7 @@
         const blob = new Blob([newHTML], { type: 'text/html' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'zhizhu_updated.html';
+        a.download = 'zhizhi_updated.html';
         a.click();
     });
 

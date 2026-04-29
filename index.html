@@ -45,29 +45,11 @@
             will-change: left, top;
             animation: tag-pop-in 0.3s ease-out;
             touch-action: none;
-            /* 默认不添加 transition，避免拖拽延迟；合并动画由特定类负责 */
         }
         @keyframes tag-pop-in {
             0% { transform: scale(0); opacity: 0; }
             50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
-        }
-        /* 合并动画专用类 */
-        .tag.merging-move {
-            transition: left 0.15s ease, top 0.15s ease, transform 0.2s ease, opacity 0.2s ease;
-        }
-        .tag.merging-out {
-            transform: scale(0.3);
-            opacity: 0;
-            pointer-events: none;
-        }
-        .tag.merging-bounce {
-            animation: merge-bounce 0.3s ease-out;
-        }
-        @keyframes merge-bounce {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.3); }
-            100% { transform: scale(1); }
         }
 
         #spider-btn-area {
@@ -205,8 +187,92 @@
 
 <script>
 (function() {
-    const TAG_POOL = ["#音乐","#博客","#游戏","#书籍","#高能预警","#社区","#谜题","#艺术","#神秘","#不安","#影视","#哲思","#故事","#科技","#情绪","#教程","#欢乐","#古早"];
+    const TAG_POOL = ["#不安","#书籍","#博客","#古早","#哲思","#影视","#情绪","#故事","#教程","#欢乐","#游戏","#社区","#神秘","#科技","#艺术","#谜题","#资源","#音乐","#高能预警"];
     const PAGES = [
+    {
+        "name": "雨后池塘",
+        "desc": "风格古早的社交网站，记录着多少人的回忆？",
+        "img": "auto",
+        "url": "https://m.yuhou.com/?from=PC",
+        "tags": [
+            "#古早",
+            "#社区",
+            "#博客"
+        ]
+    },
+    {
+        "name": "秘密花园",
+        "desc": "相当古早的博客网站，你之前或许见过？",
+        "img": "auto",
+        "url": "http://www.yini.org/",
+        "tags": [
+            "#神秘",
+            "#博客",
+            "#古早"
+        ]
+    },
+    {
+        "name": "天际线网络摄像头",
+        "desc": "展示各个知名景区的公开摄像头，或许当时你也被注视着？",
+        "img": "auto",
+        "url": "https://www.skylinewebcams.com/",
+        "tags": [
+            "#资源"
+        ]
+    },
+    {
+        "name": "飞机事故信息",
+        "desc": "记录了失事飞机的相关信息……",
+        "img": "auto",
+        "url": "https://planecrashinfo.com/",
+        "tags": [
+            "#不安",
+            "#资源"
+        ]
+    },
+    {
+        "name": "网络风尚",
+        "desc": "记录了网络上的经典图片，已经过去多久了？",
+        "img": "auto",
+        "url": "https://wlfs.pages.dev/",
+        "tags": [
+            "#古早",
+            "#资源"
+        ]
+    },
+    {
+        "name": "这个人不存在",
+        "desc": "每次访问都会展示一张不存在的人的照片，如果知道的话会感觉有点诡异。",
+        "img": "auto",
+        "url": "https://thispersondoesnotexist.com/",
+        "tags": [
+            "#不安",
+            "#哲思",
+            "#艺术"
+        ]
+    },
+    {
+        "name": "被放逐者之图书馆",
+        "desc": "“请勿折叠、旋转或者转变你的同行者。”",
+        "img": "auto",
+        "url": "https://scp-wiki-cn.wikidot.com/wanderers:start",
+        "tags": [
+            "#艺术",
+            "#神秘",
+            "#故事",
+            "#社区"
+        ]
+    },
+    {
+        "name": "CLOT杂志",
+        "desc": "一个采访艺术家的网站。",
+        "img": "auto",
+        "url": "https://clotmag.com/",
+        "tags": [
+            "#艺术",
+            "#博客"
+        ]
+    },
     {
         "name": "血清素恐惧症",
         "desc": "一个神秘的小游戏合集。“什么是电子游戏，这个游戏，以及所有游戏的答案？”",
@@ -228,7 +294,6 @@
             "#不安",
             "#神秘",
             "#艺术",
-            "#高能预警",
             "#谜题"
         ]
     },
@@ -289,7 +354,7 @@
         ]
     },
     {
-        "name": "大市场",
+        "name": "大市唱",
         "desc": "诡异的实验性专辑，真的有人能听完吗……",
         "img": "auto",
         "url": "https://www.bilibili.com/video/BV1rTMJzZE45/?spm_id_from=333.1387.favlist.content.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
@@ -413,7 +478,8 @@
         "tags": [
             "#教程",
             "#社区",
-            "#游戏"
+            "#游戏",
+            "#资源"
         ]
     },
     {
@@ -427,17 +493,19 @@
         ]
     },
     {
-        "name": "道本语学习教程",
+        "name": "道本语官网",
         "desc": "道本语由一名翻译家创作，只包含一百多个单词，大概是世界上最简单的语言了吧。据说译名来自“大道至简”。",
         "img": "auto",
-        "url": "https://zhuanlan.zhihu.com/toki-pona",
+        "url": "https://tokipona.org/",
         "tags": [
-            "#教程"
+            "#资源",
+            "#教程",
+            "#社区"
         ]
     },
     {
-        "name": "【独立恐怖游戏pv】新建图exewzwze0X·sai （绘画源文件共享预告",
-        "desc": "sai格式绘画源文件资源共享....属于游戏吗？\n只需要一个sai1软件和简单的操作就可以和来自画布里的人对话\n真正意义上的做到如何在sai里和纸片人交流？！？！？！？",
+        "name": "新建图exewzwze0X·sai",
+        "desc": "sai格式绘画源文件资源共享....属于游戏吗？\n只需要一个sai1软件和简单的操作就可以和来自画布里的人对话\n真正意义上的做到如何在sai里和纸片人交流？！",
         "img": "auto",
         "url": "https://www.bilibili.com/video/BV1BZ4y1W7Ut/?spm_id_from=333.1387.homepage.video_card.click&vd_source=c2d47236e0c7c99a479ec8a8f536d0a9",
         "tags": [
@@ -456,18 +524,6 @@
             "#影视",
             "#故事",
             "#欢乐"
-        ]
-    },
-    {
-        "name": "《羊孩贾尔斯》",
-        "desc": "超级大部头｜神话+寓言+科幻，羊孩拯救世界的超级冒险。后现代文学大师约翰·巴斯的小说。",
-        "img": "auto",
-        "url": "https://zhuanlan.zhihu.com/p/1572801706",
-        "tags": [
-            "#书籍",
-            "#神秘",
-            "#故事",
-            "#哲思"
         ]
     },
     {
@@ -656,8 +712,7 @@
         "url": "https://www.ruanyifeng.com/blog/",
         "tags": [
             "#博客",
-            "#哲思",
-            "#科技"
+            "#哲思"
         ]
     },
     {
@@ -739,8 +794,8 @@
     let lastTargetSwitchTime = 0, switchInterval = 3000;
     const DRAG_THRESHOLD = isMobile ? 10 : 3;
 
-    // 正在合并的标签集合，避免重复操作
-    let mergingTags = new Set();
+    // 最近推荐历史（最多5条）
+    let recentRecommendations = [];
 
     function randomSpeed() {
         const speed = 30 + Math.random() * 30, angle = Math.random() * 2 * Math.PI;
@@ -831,60 +886,10 @@
             const speed = randomSpeed();
             vx = speed.vx; vy = speed.vy;
         }
-        const tagData = { el, x, y, vx, vy, type, tagWidth, tagHeight };
+        const tagData = { el, x, y, vx, vy, type, tagWidth, tagHeight, recCount: 0 };
         tags.push(tagData);
         el.style.left = x + 'px';
         el.style.top = y + 'px';
-    }
-
-    // 合并动画：将tagB移动到tagA的位置并缩小淡出，同时tagA弹跳
-    function mergeTags(tagA, tagB) {
-        if (mergingTags.has(tagA) || mergingTags.has(tagB)) return;
-        mergingTags.add(tagA);
-        mergingTags.add(tagB);
-
-        // 临时给这两个标签加上 transition 类
-        tagB.el.classList.add('merging-move');
-        tagA.el.classList.add('merging-move');
-
-        // 将tagB瞬间移动到tagA的中心点
-        const ax = tagA.x + tagA.tagWidth/2 - tagB.tagWidth/2;
-        const ay = tagA.y + tagA.tagHeight/2 - tagB.tagHeight/2;
-        tagB.x = ax; tagB.y = ay; // 同步数据
-        tagB.el.style.left = ax + 'px';
-        tagB.el.style.top = ay + 'px';
-
-        // 下一帧开始动画
-        requestAnimationFrame(() => {
-            tagB.el.classList.add('merging-out');
-            tagA.el.classList.add('merging-bounce');
-        });
-
-        // 动画结束后移除tagB
-        const onTransitionEnd = () => {
-            tagB.el.removeEventListener('transitionend', onTransitionEnd);
-            const idx = tags.indexOf(tagB);
-            if (idx > -1) tags.splice(idx, 1);
-            tagB.el.remove();
-            mergingTags.delete(tagA);
-            mergingTags.delete(tagB);
-            tagA.el.classList.remove('merging-bounce', 'merging-move');
-            tagB.el.classList.remove('merging-move', 'merging-out');
-        };
-        tagB.el.addEventListener('transitionend', onTransitionEnd, { once: true });
-
-        // 兜底：0.5秒后强制移除
-        setTimeout(() => {
-            if (tags.includes(tagB)) {
-                tagB.el.removeEventListener('transitionend', onTransitionEnd);
-                const idx = tags.indexOf(tagB);
-                if (idx > -1) tags.splice(idx, 1);
-                tagB.el.remove();
-                mergingTags.delete(tagA);
-                mergingTags.delete(tagB);
-                tagA.el.classList.remove('merging-bounce', 'merging-move');
-            }
-        }, 500);
     }
 
     function isMouseOverTag(tagEl) {
@@ -895,7 +900,6 @@
     function updateTagHoverStates() {
         if (isMobile || overlayVisible || draggingTag) return;
         for (let tag of tags) {
-            if (mergingTags.has(tag)) continue;
             tag.el.dataset.hovered = isMouseOverTag(tag.el) ? 'true' : 'false';
         }
     }
@@ -910,8 +914,7 @@
         e.preventDefault(); e.stopPropagation();
         const tagEl = e.currentTarget;
         const tag = tags.find(t => t.el === tagEl);
-        if (!tag || mergingTags.has(tag)) return;
-        // 拖拽时禁用 transition，避免粘滞感
+        if (!tag) return;
         tagEl.style.transition = 'none';
         tagEl.dataset.hovered = 'true';
         draggingTag = tag;
@@ -954,7 +957,6 @@
         if (!draggingTag) return;
         const tag = draggingTag;
         tag.el.style.zIndex = '5';
-        // 恢复 transition（移除内联样式，让CSS规则生效）
         tag.el.style.transition = '';
         tag.el.releasePointerCapture(e.pointerId);
 
@@ -1046,7 +1048,6 @@
         lineCtx.strokeStyle='#D9D9D9'; lineCtx.lineWidth=1.5;
         for (let i=0;i<tags.length;i++) for (let j=i+1;j<tags.length;j++){
             const a=tags[i], b=tags[j];
-            if (mergingTags.has(a) || mergingTags.has(b)) continue;
             const ax=a.x+a.tagWidth/2, ay=a.y+a.tagHeight/2, bx=b.x+b.tagWidth/2, by=b.y+b.tagHeight/2;
             if (Math.hypot(bx-ax,by-ay)<130) {
                 lineCtx.beginPath(); lineCtx.moveTo(ax,ay); lineCtx.lineTo(bx,by); lineCtx.stroke();
@@ -1058,7 +1059,7 @@
         if (overlayVisible) return;
         const rect = layerContainer.getBoundingClientRect();
         for (let tag of tags) {
-            if (tag.el.dataset.hovered === 'true' || draggingTag === tag || mergingTags.has(tag)) continue;
+            if (tag.el.dataset.hovered === 'true' || draggingTag === tag) continue;
             tag.x += tag.vx * deltaTime; tag.y += tag.vy * deltaTime;
             tag.tagWidth = tag.el.offsetWidth; tag.tagHeight = tag.el.offsetHeight;
             if (tag.x <= 0) { tag.x = 0; tag.vx *= -1; }
@@ -1067,26 +1068,6 @@
             if (tag.y + tag.tagHeight >= rect.height) { tag.y = rect.height - tag.tagHeight; tag.vy *= -1; }
             tag.el.style.left = tag.x + 'px'; tag.el.style.top = tag.y + 'px';
         }
-
-        // 相同标签融合检测
-        const toMerge = [];
-        for (let i = 0; i < tags.length; i++) {
-            for (let j = i + 1; j < tags.length; j++) {
-                const a = tags[i], b = tags[j];
-                if (a.type !== b.type) continue;
-                if (mergingTags.has(a) || mergingTags.has(b)) continue;
-                if (a.el.dataset.hovered === 'true' || b.el.dataset.hovered === 'true') continue;
-                if (draggingTag === a || draggingTag === b) continue;
-                const ax = a.x + a.tagWidth/2, ay = a.y + a.tagHeight/2;
-                const bx = b.x + b.tagWidth/2, by = b.y + b.tagHeight/2;
-                const dist = Math.hypot(bx - ax, by - ay);
-                const threshold = (a.tagWidth + b.tagWidth) / 2;
-                if (dist < threshold) {
-                    toMerge.push([a, b]);
-                }
-            }
-        }
-        toMerge.forEach(pair => mergeTags(pair[0], pair[1]));
     }
 
     function drawSpider(ctx, w, h, bx, by, br, seg1, seg2, bend, mx, my, pupilScale) {
@@ -1149,9 +1130,24 @@
     }
 
     function recommendRandom(tagType, clickX, clickY) {
-        let candidates = PAGES.filter(p => p.tags.includes(tagType));
-        if (candidates.length === 0) candidates = PAGES;
-        const item = candidates[Math.floor(Math.random() * candidates.length)];
+        let candidates = PAGES.filter(p => p.tags.includes(tagType) && p.name !== ''); // 过滤掉空页面
+        if (candidates.length === 0) candidates = PAGES.filter(p => p.name !== '');
+
+        // 过滤最近5次推荐过的页面
+        let filtered = candidates.filter(p => !recentRecommendations.some(r => r.name === p.name && r.url === p.url));
+        if (filtered.length === 0) {
+            // 若同标签下全部被排除，则从全局（所有页面）再尝试过滤
+            filtered = PAGES.filter(p => p.name !== '' && !recentRecommendations.some(r => r.name === p.name && r.url === p.url));
+            if (filtered.length === 0) {
+                filtered = candidates; // 最后保底
+            }
+        }
+
+        const item = filtered[Math.floor(Math.random() * filtered.length)];
+        // 更新历史记录
+        recentRecommendations.unshift(item);
+        if (recentRecommendations.length > 5) recentRecommendations.pop();
+
         currentRecommendData = item;
         currentRecommendTagType = tagType;
         overlayVisible = true;
@@ -1173,6 +1169,20 @@
         if (wrapper) wrapper.style.display = 'block';
         const cRect = popupSpiderCanvas.getBoundingClientRect();
         drawPopupSpider(mouseX - cRect.left, mouseY - cRect.top);
+
+        // --- 标签寿命管理：每次推荐增加计数，移除过期标签 ---
+        const toRemove = [];
+        for (let tag of tags) {
+            tag.recCount = (tag.recCount || 0) + 1;
+            if (tag.recCount >= 4) {
+                toRemove.push(tag);
+            }
+        }
+        toRemove.forEach(tag => {
+            tag.el.remove();
+            const idx = tags.indexOf(tag);
+            if (idx > -1) tags.splice(idx, 1);
+        });
     }
 
     function positionPopup(cx, cy) {
